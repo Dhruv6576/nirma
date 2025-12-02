@@ -232,6 +232,20 @@
     .yellow { background: var(--warning-bg); color: var(--warning-text); border: 1px solid #fde68a; }
     .red { background: var(--danger-bg); color: var(--danger-text); border: 1px solid #fecaca; }
 
+    /* Disclaimer Section */
+    .disclaimer-box {
+        margin-top: 40px;
+        padding: 20px;
+        text-align: center;
+        border-top: 1px solid var(--border);
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        line-height: 1.5;
+    }
+    .disclaimer-box strong {
+        color: var(--text-main);
+    }
+
     /* Mobile Breakpoints */
     @media (min-width: 768px) {
       .user-info { display: block; }
@@ -278,6 +292,13 @@
 
     <!-- Subject Grid -->
     <div id="subjects"></div>
+
+    <!-- Disclaimer -->
+    <div class="disclaimer-box">
+        <strong>Disclaimer:</strong> This tool is created by a student for educational purposes only. 
+        It is not an official Nirma University system. Calculations are approximate 
+        and may differ from official results. Always verify with university guidelines.
+    </div>
     
   </div>
 
@@ -376,7 +397,7 @@
             <input 
                 type="number" 
                 id="${id}_grade" 
-                placeholder="0" 
+                placeholder="10" 
                 step="1" 
                 min="1" 
                 max="10"
