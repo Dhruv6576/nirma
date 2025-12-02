@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Semester 2 – Coming Soon</title>
+
+  <style>
+    :root {
+      --primary: #D32F2F;
+      --primary-dark: #b71c1c;
+      --bg: #f3f4f6;
+      --card: #fff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+    }
+
+    .card {
+      background: var(--card);
+      padding: 40px 30px;
+      border-radius: 16px;
+      box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
+      width: 90%;
+      max-width: 420px;
+      border: 1px solid var(--border);
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      color: var(--primary);
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 25px;
+    }
+
+    .soon-box {
+      background: var(--bg);
+      padding: 15px;
+      border-radius: 10px;
+      border: 1px dashed var(--primary);
+      color: var(--primary);
+      font-weight: 600;
+      margin-bottom: 25px;
+      font-size: 1rem;
+    }
+
+    .btn {
+      padding: 12px 18px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+      width: 100%;
+    }
+
+    .btn:hover {
+      background: var(--primary-dark);
+    }
+
+    .small-note {
+      margin-top: 15px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <div class="card">
+    <h1>Semester 2</h1>
+    <div class="soon-box">Coming Soon...</div>
+
+    <p>
+      The Semester 2 SEE Calculator is under development.<br>
+      It will be available shortly with full marks prediction and SGPA estimator.
+    </p>
+
+    <button class="btn" onclick="window.location.href='/see'">⬅ Back to Sem-1</button>
+
+    <div class="small-note">Version 1.0 • Updated by Dhruv</div>
+  </div>
+
+</body>
+</html>
