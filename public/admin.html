@@ -273,6 +273,8 @@
 
         .detail-row { display: none; background: #f8fafc; }
         .detail-row.open { display: table-row; }
+        /* NEW: Class to hide rows during search without breaking structure */
+        .search-hidden { display: none !important; }
         
         .inner-table {
             width: 95%;
@@ -362,7 +364,7 @@
         <div class="controls-bar">
             <div class="search-wrapper">
                 <span class="material-symbols-rounded search-icon">search</span>
-                <input id="searchBox" type="text" placeholder="Search by email address...">
+                <input id="searchBox" type="text" placeholder="Search by email, subject, or result...">
             </div>
             <div class="action-btns">
                 <button id="refreshBtn" class="btn-refresh">
@@ -481,10 +483,9 @@
                 const results = data.data || [];
                 const rowId = doc.id;
 
-                // --- Calculate SGPA (Since it might not be in the DB) ---
+                // --- Calculate SGPA ---
                 let totalGrade = 0;
                 results.forEach(r => totalGrade += (parseFloat(r.grade) || 0));
-                // SGPA is usually average of grades. Assuming 6 subjects or length of array.
                 const sgpa = results.length > 0 ? (totalGrade / results.length).toFixed(2) : "0.00";
 
                 const mainRow = document.createElement("tr");
@@ -569,6 +570,31 @@
             btn.classList.toggle("rotated");
         };
 
+        // --- FIXED SEARCH LOGIC ---
+        document.getElementById("searchBox").oninput = function() {
+            const term = this.value.toLowerCase();
+            const rows = document.querySelectorAll("#attemptTbl tbody tr");
+            
+            // Loop in pairs: Main Row + Detail Row
+            for(let i=0; i < rows.length; i += 2) {
+                const mainRow = rows[i];
+                const detailRow = rows[i+1];
+                
+                if (!mainRow || !detailRow) continue;
+
+                // Combine text from both main row (email) and detail row (subjects/results)
+                const fullText = (mainRow.innerText + " " + detailRow.innerText).toLowerCase();
+                
+                if(fullText.includes(term)) {
+                    mainRow.classList.remove('search-hidden');
+                    detailRow.classList.remove('search-hidden'); 
+                } else {
+                    mainRow.classList.add('search-hidden');
+                    detailRow.classList.add('search-hidden');
+                }
+            }
+        };
+
         document.getElementById("downloadCSV").onclick = async () => {
             const q = query(collection(db, "student_attempts"), orderBy("timestamp", "desc"));
             const snap = await getDocs(q);
@@ -588,20 +614,6 @@
             a.href = url;
             a.download = "Nirma_SEE_Data.csv";
             a.click();
-        };
-
-        document.getElementById("searchBox").oninput = function() {
-            const term = this.value.toLowerCase();
-            const rows = document.querySelectorAll("#attemptTbl tbody tr");
-            for(let i=0; i<rows.length; i+=2) {
-                const mainRow = rows[i];
-                const text = mainRow.innerText.toLowerCase();
-                if(text.includes(term)) {
-                    mainRow.style.display = "";
-                } else {
-                    mainRow.style.display = "none";
-                }
-            }
         };
 
         document.getElementById("logoutBtn").onclick = () => {
