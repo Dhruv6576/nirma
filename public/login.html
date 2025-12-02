@@ -1,64 +1,360 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Nirma Login</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nirma SEE Calculator | Login</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #D32F2F; /* Nirma Red */
+            --primary-dark: #b71c1c;
+            --text-dark: #111827;
+            --text-light: #6b7280;
+            --white: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden; /* Prevents scroll on PC */
+            display: flex;
+            background: var(--white);
+        }
+
+        /* --- LEFT SIDE: BRANDING (Fills the blank space) --- */
+        .brand-section {
+            flex: 1.2; /* Takes up slightly more space on wide screens */
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 4rem;
+            color: var(--white);
+            overflow: hidden;
+        }
+
+        /* Abstract CSS Pattern to make it look professional without images */
+        .brand-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%),
+                        radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1) 0%, transparent 40%);
+            animation: moveBackground 20s linear infinite;
+        }
+
+        .brand-content {
+            position: relative;
+            z-index: 2;
+            max-width: 600px;
+        }
+
+        .brand-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .brand-section h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            letter-spacing: -1px;
+        }
+
+        .brand-section p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            line-height: 1.6;
+            max-width: 90%;
+        }
+
+        /* --- RIGHT SIDE: LOGIN FORM --- */
+        .login-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            background: var(--white);
+            position: relative;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            padding: 2rem;
+        }
+
+        .mobile-header {
+            display: none; /* Hidden on PC */
+            margin-bottom: 2rem;
+        }
+        
+        .mobile-header h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+        
+        .mobile-header span {
+            color: var(--primary-color);
+        }
+
+        .login-instructions {
+            margin-bottom: 2.5rem;
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+
+        /* Button Styling */
+        .google-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            background-color: var(--white);
+            border: 1px solid #dadce0;
+            border-radius: 12px;
+            padding: 16px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            color: #3c4043;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            gap: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+        }
+
+        .google-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            border-color: #d2e3fc;
+            background-color: #f8faff;
+        }
+
+        .google-btn:active {
+            transform: scale(0.98);
+        }
+
+        .google-btn img {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Spinner & Error */
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 0.8s ease-in-out infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes moveBackground { 0% { transform: translate(0,0); } 100% { transform: translate(10px, 10px); } }
+
+        #error-msg {
+            margin-top: 1.5rem;
+            padding: 12px;
+            border-radius: 8px;
+            background: #FEF2F2;
+            border: 1px solid #FECACA;
+            color: #991B1B;
+            font-size: 0.9rem;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .footer-text {
+            margin-top: 3rem;
+            font-size: 0.85rem;
+            color: #9CA3AF;
+            text-align: center;
+        }
+
+        /* --- RESPONSIVE DESIGN (MOBILE) --- */
+        @media (max-width: 900px) {
+            body {
+                flex-direction: column; /* Stack vertically */
+                height: auto; /* Allow scroll */
+                min-height: 100vh;
+            }
+
+            .brand-section {
+                flex: none;
+                padding: 3rem 2rem;
+                height: auto;
+                min-height: 250px; /* Hero height on mobile */
+            }
+
+            .brand-section h1 { font-size: 2.2rem; }
+            .brand-section p { font-size: 1rem; display: none; } /* Hide description on mobile to save space */
+            .brand-badge { margin-bottom: 1rem; }
+
+            .login-section {
+                flex: 1;
+                padding: 2rem 1.5rem;
+                justify-content: flex-start; /* Align to top */
+                background: var(--white);
+                border-radius: 24px 24px 0 0; /* Rounded top corners */
+                margin-top: -20px; /* Overlap effect */
+                z-index: 10;
+            }
+
+            .mobile-header { display: block; }
+            .login-card { padding: 0; }
+        }
+    </style>
 </head>
 
 <body>
-  <h2>Login with Nirma Email</h2>
-  <button id="loginBtn">Login with Google</button>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut }
-      from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, serverTimestamp }
-      from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
-    import { firebaseConfig } from "./firebase.js";
+    <!-- Left Side: Visuals -->
+    <div class="brand-section">
+        <div class="brand-content">
+            <div class="brand-badge">2025 Student Utility</div>
+            <h1>Nirma University<br>SEE Calculator</h1>
+            <p>Plan your semester exams smarter. Check minimum passing marks and track your SGPA targets in seconds.</p>
+        </div>
+    </div>
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
-    const db = getFirestore(app);
+    <!-- Right Side: Interaction -->
+    <div class="login-section">
+        <div class="login-card">
+            
+            <!-- Mobile specific header inside the white card area -->
+            <div class="mobile-header">
+                <h2>Welcome <span>Student</span></h2>
+            </div>
 
-    // FIXED LOGIN FUNCTION
-    async function doLogin() {
-      try {
-        const result = await signInWithPopup(auth, provider);
-        const email = result.user.email;
+            <p class="login-instructions">
+                Please sign in with your official university email to access your dashboard.
+            </p>
 
-        // Save login log once
-        await addDoc(collection(db, "users_logins"), {
-          email: email,
-          name: result.user.displayName,
-          photo: result.user.photoURL,
-          timestamp: serverTimestamp()
-        });
+            <button id="loginBtn" class="google-btn">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo">
+                <span id="btnText">Sign in with @nirmauni.ac.in</span>
+                <div id="loader" class="spinner"></div>
+            </button>
 
-        // Admin redirect
-        if (email === "dhruvbhalala07@gmail.com") {
-          window.location.href = "/admin";
-          return;
+            <div id="error-msg"></div>
+
+            <div class="footer-text">
+                &copy; 2025 By Nirma Student<br>
+                Secure & Private Login
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+        import { firebaseConfig } from "./firebase.js";
+
+        // Logic remains exactly the same
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+        const db = getFirestore(app);
+
+        const loginBtn = document.getElementById("loginBtn");
+        const btnText = document.getElementById("btnText");
+        const loader = document.getElementById("loader");
+        const errorMsg = document.getElementById("error-msg");
+
+        function setLoading(isLoading) {
+            if (isLoading) {
+                loginBtn.style.opacity = "0.7";
+                loginBtn.style.pointerEvents = "none";
+                btnText.style.display = 'none';
+                loader.style.display = "block";
+                errorMsg.style.display = "none";
+            } else {
+                loginBtn.style.opacity = "1";
+                loginBtn.style.pointerEvents = "auto";
+                btnText.style.display = 'block';
+                btnText.textContent = "Sign in with @nirmauni.ac.in";
+                loader.style.display = "none";
+            }
         }
 
-        // Student redirect
-        if (email.endsWith("@nirmauni.ac.in")) {
-          window.location.href = "/see";
-        } else {
-          alert("Access restricted to Nirma University students only.");
-          await signOut(auth);
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.style.display = "block";
         }
 
-      } catch (err) {
-        alert("Login failed: " + err.message);
-      }
-    }
+        async function doLogin() {
+            setLoading(true);
+            try {
+                provider.setCustomParameters({ prompt: 'select_account' });
+                const result = await signInWithPopup(auth, provider);
+                const email = result.user.email;
 
-    // FIXED: Connect button
-    document.getElementById("loginBtn").onclick = doLogin;
+                await addDoc(collection(db, "users_logins"), {
+                    email: email,
+                    name: result.user.displayName,
+                    photo: result.user.photoURL,
+                    timestamp: serverTimestamp()
+                });
 
-  </script>
+                if (email === "dhruvbhalala07@gmail.com") {
+                    window.location.href = "/admin";
+                    return;
+                }
+
+                if (email.endsWith("@nirmauni.ac.in")) {
+                    btnText.textContent = "Redirecting...";
+                    btnText.style.display = "block";
+                    loader.style.display = "none";
+                    window.location.href = "/see";
+                } else {
+                    await signOut(auth);
+                    showError("Access Restricted: Please use your Nirma University email ID.");
+                    setLoading(false);
+                }
+
+            } catch (err) {
+                console.error(err);
+                if(err.code === 'auth/popup-closed-by-user'){
+                    setLoading(false); // Just reset button
+                } else {
+                    showError("Login failed. Please try again.");
+                    setLoading(false);
+                }
+            }
+        }
+
+        document.getElementById("loginBtn").onclick = doLogin;
+    </script>
 
 </body>
 </html>
