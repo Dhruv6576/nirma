@@ -232,9 +232,124 @@
     .yellow { background: var(--warning-bg); color: var(--warning-text); border: 1px solid #fde68a; }
     .red { background: var(--danger-bg); color: var(--danger-text); border: 1px solid #fecaca; }
 
+    /* FAQ Section */
+    .faq-section {
+        margin-top: 30px;
+        background: white;
+        padding: 0;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+    .faq-header {
+        padding: 20px 25px;
+        background: #fafafa;
+        border-bottom: 1px solid var(--border);
+    }
+    .faq-header h3 {
+        margin: 0;
+        color: var(--text-main);
+        font-size: 1.1rem;
+    }
+    .faq-item {
+        border-bottom: 1px solid var(--bg);
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .faq-item:last-child {
+        border-bottom: none;
+    }
+    .faq-item:hover {
+        background: #fdfdfd;
+    }
+    .faq-question {
+        padding: 20px 25px;
+        font-weight: 600;
+        color: var(--primary);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        user-select: none;
+    }
+    .faq-icon {
+        font-size: 0.8rem;
+        transition: transform 0.3s ease;
+        color: var(--text-muted);
+    }
+    .faq-item.active .faq-icon {
+        transform: rotate(180deg);
+        color: var(--primary);
+    }
+    .faq-answer {
+        display: none;
+        padding: 0 25px 25px 25px;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        line-height: 1.6;
+        animation: slideDown 0.3s ease;
+    }
+    .faq-item.active .faq-answer {
+        display: block;
+    }
+    
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Flowchart CSS */
+    .flowchart {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 20px;
+        background: var(--bg);
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px dashed var(--border);
+    }
+    .step {
+        text-align: center;
+        width: 100%;
+        max-width: 320px;
+        position: relative;
+    }
+    .step-box {
+        background: white;
+        border: 1px solid var(--border);
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        color: var(--text-main);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        position: relative;
+        z-index: 2;
+    }
+    .step-box.highlight {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+    .step-desc {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 6px;
+        background: rgba(255,255,255,0.5);
+        padding: 4px;
+        border-radius: 4px;
+    }
+    .arrow {
+        font-size: 1.5rem;
+        color: var(--text-muted);
+        margin: 4px 0;
+        line-height: 1;
+        opacity: 0.5;
+    }
+
     /* Disclaimer Section */
     .disclaimer-box {
-        margin-top: 40px;
+        margin-top: 20px;
         padding: 20px;
         text-align: center;
         border-top: 1px solid var(--border);
@@ -293,6 +408,78 @@
     <!-- Subject Grid -->
     <div id="subjects"></div>
 
+    <!-- FAQ Section with Flowchart -->
+    <div class="faq-section">
+        <div class="faq-header">
+            <h3>Frequently Asked Questions</h3>
+        </div>
+        
+        <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-question">
+                 <span>How is the calculation done?</span>
+                 <span class="faq-icon">▼</span>
+            </div>
+            <div class="faq-answer">
+                <p>The calculator uses the official weightage distribution to first determine your current standing (Internal Marks) and then calculates the remaining marks needed in the final exam (SEE) to reach your target grade.</p>
+                
+                <!-- CSS Flowchart -->
+                <div class="flowchart">
+                    <div class="step">
+                        <div class="step-box">1. Input Marks</div>
+                        <div class="step-desc">Sessional, Assignment, Lab, LPW</div>
+                    </div>
+                    <div class="arrow">↓</div>
+                    <div class="step">
+                        <div class="step-box">2. Calculate Internal (50%)</div>
+                        <div class="step-desc">
+                            <strong>Simple:</strong> (Sess/50)*25 + (Assgn/50)*25<br>
+                            <strong>Complex:</strong> (Sess/50)*15 + (Assgn/50)*10 + (LAB/100)*15 + (LPW/40)*10
+                        </div>
+                    </div>
+                    <div class="arrow">↓</div>
+                    <div class="step">
+                        <div class="step-box">3. Determine Target %</div>
+                        <div class="step-desc">e.g., Grade 9 = 81% Total Aggregate Required</div>
+                    </div>
+                    <div class="arrow">↓</div>
+                    <div class="step">
+                        <div class="step-box highlight">4. Final Formula</div>
+                        <div class="step-desc">
+                            (Target % - Internal Marks) × 2 = <strong>Required SEE Marks</strong>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Query Section (New) -->
+    <div class="card" style="margin-top: 30px; text-align: center; border: 1px dashed var(--border);">
+        <div style="font-weight: 600; font-size: 1rem; margin-bottom: 8px;">Is there any query?</div>
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">
+            Click below to send an email directly using your Nirma ID.
+        </div>
+        <a href="mailto:dhruvbhalala05@gmail.com" style="
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: white;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        " onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='white'">
+            <span>📧</span> Mail to dhruvbhalala05@gmail.com
+        </a>
+    </div>
+
     <!-- Disclaimer -->
     <div class="disclaimer-box">
         <strong>Disclaimer:</strong> This tool is created by a student for educational purposes only. 
@@ -347,8 +534,8 @@
     ---------------------------*/
     subjects.forEach((s, i) => {
       const id = "s" + i;
+      const assignMax = s.type === "simple" ? 50 : 40;
 
-      // UPDATED: step="1" and oninput validation for integer grade
       let html = `
       <div class="card">
         <div class="card-title">${s.name}</div>
@@ -356,7 +543,14 @@
         <div class="field-row">
           <span class="field-label">Sessional</span>
           <div class="input-wrapper">
-            <input type="number" id="${id}_i1" placeholder="0">
+            <input 
+                type="number" 
+                id="${id}_i1" 
+                placeholder="0" 
+                min="0" 
+                max="50" 
+                oninput="if(parseFloat(this.value) > 50) this.value = 50; if(parseFloat(this.value) < 0) this.value = 0;"
+            >
             <span>/50</span>
           </div>
         </div>
@@ -364,8 +558,15 @@
         <div class="field-row">
           <span class="field-label">Assignment</span>
           <div class="input-wrapper">
-            <input type="number" id="${id}_i2" placeholder="0">
-            <span>/${s.type === "simple" ? 50 : 40}</span>
+            <input 
+                type="number" 
+                id="${id}_i2" 
+                placeholder="0" 
+                min="0"
+                max="${assignMax}"
+                oninput="if(parseFloat(this.value) > ${assignMax}) this.value = ${assignMax}; if(parseFloat(this.value) < 0) this.value = 0;"
+            >
+            <span>/${assignMax}</span>
           </div>
         </div>
       `;
@@ -375,15 +576,29 @@
         <div class="field-row">
           <span class="field-label">Lab Manual</span>
           <div class="input-wrapper">
-            <input type="number" id="${id}_pract" placeholder="0">
+            <input 
+                type="number" 
+                id="${id}_pract" 
+                placeholder="0"
+                min="0"
+                max="100"
+                oninput="if(parseFloat(this.value) > 100) this.value = 100; if(parseFloat(this.value) < 0) this.value = 0;"
+            >
             <span>/100</span>
           </div>
         </div>
 
         <div class="field-row">
-          <span class="field-label">LPW (Viva)</span>
+          <span class="field-label">LPW</span>
           <div class="input-wrapper">
-            <input type="number" id="${id}_viva" placeholder="0">
+            <input 
+                type="number" 
+                id="${id}_viva" 
+                placeholder="0"
+                min="0"
+                max="40"
+                oninput="if(parseFloat(this.value) > 40) this.value = 40; if(parseFloat(this.value) < 0) this.value = 0;"
+            >
             <span>/40</span>
           </div>
         </div>
@@ -397,7 +612,7 @@
             <input 
                 type="number" 
                 id="${id}_grade" 
-                placeholder="10" 
+                placeholder="0" 
                 step="1" 
                 min="1" 
                 max="10"
@@ -522,6 +737,12 @@
 
     };
 
+    /* --------------------------
+       FAQ TOGGLE
+    ---------------------------*/
+    window.toggleFaq = function(el) {
+        el.classList.toggle("active");
+    };
 
     /* --------------------------
        AUTH & DATA LOADING
