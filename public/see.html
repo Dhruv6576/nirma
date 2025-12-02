@@ -322,12 +322,12 @@
     const container = document.getElementById("subjects");
 
     /* --------------------------
-       RENDER SUBJECT CARDS (Styled Update)
+       RENDER SUBJECT CARDS
     ---------------------------*/
     subjects.forEach((s, i) => {
       const id = "s" + i;
 
-      // Note: I updated the HTML string to use classes, but preserved IDs for logic
+      // UPDATED: step="1" and oninput validation for integer grade
       let html = `
       <div class="card">
         <div class="card-title">${s.name}</div>
@@ -360,7 +360,7 @@
         </div>
 
         <div class="field-row">
-          <span class="field-label">LPW</span>
+          <span class="field-label">LPW (Viva)</span>
           <div class="input-wrapper">
             <input type="number" id="${id}_viva" placeholder="0">
             <span>/40</span>
@@ -373,12 +373,20 @@
         <div class="field-row target-grade-section">
           <span class="field-label" style="font-weight:600; color:var(--text-main)">Target Grade</span>
           <div class="input-wrapper" style="border-color: #ddd;">
-            <input type="number" id="${id}_grade" placeholder="10">
+            <input 
+                type="number" 
+                id="${id}_grade" 
+                placeholder="0" 
+                step="1" 
+                min="1" 
+                max="10"
+                oninput="this.value = Math.round(this.value); if(this.value > 10) this.value = 10;"
+            >
             <span>/10</span>
           </div>
         </div>
 
-        <button class="btn-calc" onclick="showRequired('${id}', ${i})">Calculate Marks</button>
+        <button class="btn-calc" onclick="showRequired('${id}', ${i})">Calculate Required</button>
 
         <div id="${id}_result" class="result" style="display:none;"></div>
 
@@ -390,15 +398,17 @@
 
 
     /* --------------------------
-       VALUE GETTER (Unchanged)
+       VALUE GETTER
     ---------------------------*/
-    function getVal(id) {
-      return parseFloat(document.getElementById(id)?.value) || 0;
+    function getVal(id, isInt = false) {
+      const el = document.getElementById(id);
+      if(!el || !el.value) return 0;
+      return isInt ? parseInt(el.value, 10) : parseFloat(el.value);
     }
 
 
     /* --------------------------
-       CALCULATION LOGIC (Unchanged)
+       CALCULATION LOGIC
     ---------------------------*/
     function calculate() {
       let results = [];
@@ -411,7 +421,9 @@
         const assignment = getVal(id + "_i2");
         const labManual = getVal(id + "_pract");
         const lpw = getVal(id + "_viva");
-        const grade = getVal(id + "_grade");
+        
+        // FORCED INTEGER for grade
+        const grade = getVal(id + "_grade", true);
         const reqPercent = gradeToPercent[grade] || 0;
 
         let internal = 0;
@@ -444,7 +456,7 @@
       });
 
       let totalGrade = 0;
-      results.forEach(r => totalGrade += (parseFloat(r.grade) || 0));
+      results.forEach(r => totalGrade += (parseInt(r.grade) || 0));
       const sgpa = totalGrade / 6;
       document.getElementById("sgpaBox").innerHTML = sgpa.toFixed(2);
 
@@ -491,7 +503,7 @@
 
 
     /* --------------------------
-       AUTH & DATA LOADING (Updated for UI only)
+       AUTH & DATA LOADING
     ---------------------------*/
     auth.onAuthStateChanged(async (user) => {
       if (!user) {
