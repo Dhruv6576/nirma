@@ -231,12 +231,14 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             border-bottom: 1px solid var(--border);
+            white-space: nowrap;
         }
 
         td {
             padding: 16px;
             border-bottom: 1px solid var(--border);
             vertical-align: middle;
+            white-space: nowrap;
         }
 
         tr:last-child td { border-bottom: none; }
@@ -281,7 +283,7 @@
             border: 1px solid var(--border);
         }
         .inner-table th { background: white; border-bottom: 2px solid var(--bg-body); color: var(--text-main); }
-        .inner-table td { padding: 12px; border-bottom: 1px solid #f3f4f6; font-size: 0.85rem; }
+        .inner-table td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; font-size: 0.85rem; }
 
         /* TABS */
         .tab-content { display: none; }
@@ -294,6 +296,7 @@
             main { margin-left: 0; padding: 15px; }
             .stats-grid { grid-template-columns: 1fr 1fr; }
             .search-wrapper { width: 100%; }
+            th, td { padding: 12px 8px; }
         }
     </style>
 </head>
@@ -430,7 +433,6 @@
                 alert("Unauthorized Access");
                 window.location.href = "/see";
             } else {
-                // Set Admin Profile
                 document.getElementById("adminName").textContent = user.displayName;
                 document.getElementById("adminPhoto").src = user.photoURL;
             }
@@ -440,7 +442,6 @@
         window.switchTab = (tabName, el) => {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            
             document.getElementById('tab-' + tabName).classList.add('active');
             el.classList.add('active');
         };
@@ -450,15 +451,12 @@
             const refreshBtn = document.getElementById("refreshBtn");
             refreshBtn.innerHTML = '<span class="material-symbols-rounded">sync</span> Loading...';
 
-            // 1. Attempts
             const qAttempts = query(collection(db, "student_attempts"), orderBy("timestamp", "desc"));
             const snapAttempts = await getDocs(qAttempts);
             
-            // 2. Logins
             const qLogins = query(collection(db, "users_logins"), orderBy("timestamp", "desc"));
             const snapLogins = await getDocs(qLogins);
 
-            // Update Stats
             document.getElementById("statAttempts").innerText = snapAttempts.size;
             document.getElementById("statLogins").innerText = snapLogins.size;
 
@@ -481,15 +479,20 @@
             snap.forEach(doc => {
                 const data = doc.data();
                 const results = data.data || [];
-                const sgpa = results.length > 0 ? (results[0].sgpa || 0).toFixed(2) : "N/A";
                 const rowId = doc.id;
+
+                // --- Calculate SGPA (Since it might not be in the DB) ---
+                let totalGrade = 0;
+                results.forEach(r => totalGrade += (parseFloat(r.grade) || 0));
+                // SGPA is usually average of grades. Assuming 6 subjects or length of array.
+                const sgpa = results.length > 0 ? (totalGrade / results.length).toFixed(2) : "0.00";
 
                 const mainRow = document.createElement("tr");
                 mainRow.innerHTML = `
                     <td style="font-weight:500;">${data.email}</td>
                     <td class="timestamp">${formatDate(data.timestamp)}</td>
                     <td><span class="status-badge" style="background:#f3f4f6; color:#374151;">${results.length} Subjects</span></td>
-                    <td><span class="status-badge">${sgpa} SGPA</span></td>
+                    <td><span class="status-badge" style="background:#dcfce7; color:#166534; border:1px solid #bbf7d0;">${sgpa} SGPA</span></td>
                     <td>
                         <button class="expand-btn" onclick="toggleRow('${rowId}', this)">
                             <span class="material-symbols-rounded">expand_more</span>
@@ -504,13 +507,24 @@
                     <td colspan="5">
                         <table class="inner-table">
                             <thead>
-                                <tr><th>Subject</th><th>Internal</th><th>Target Grade</th><th>Required SEE</th></tr>
+                                <tr>
+                                    <th>Subject</th>
+                                    <th>Sessional</th>
+                                    <th>Assignment</th>
+                                    <th>Lab Manual</th>
+                                    <th>LPW</th>
+                                    <th>Target Grade</th>
+                                    <th>Required SEE</th>
+                                </tr>
                             </thead>
                             <tbody>
                                 ${results.map(r => `
                                     <tr>
-                                        <td>${r.subject}</td>
-                                        <td>${(r.internal || 0).toFixed(1)}</td>
+                                        <td style="font-weight:500">${r.subject}</td>
+                                        <td>${r.sessinal ?? '-'}</td>
+                                        <td>${r.assignment ?? '-'}</td>
+                                        <td>${r.labManual ?? '-'}</td>
+                                        <td>${r.lpw ?? '-'}</td>
                                         <td>${r.grade}</td>
                                         <td style="font-weight:bold; ${r.requiredSEE > 100 ? 'color:#D32F2F' : 'color:#047857'}">
                                             ${r.requiredSEE}
@@ -549,24 +563,22 @@
             });
         }
 
-        // --- ROW EXPAND LOGIC ---
         window.toggleRow = (id, btn) => {
             const row = document.getElementById("detail-" + id);
             row.classList.toggle("open");
             btn.classList.toggle("rotated");
         };
 
-        // --- CSV EXPORT (Simplified Logic) ---
         document.getElementById("downloadCSV").onclick = async () => {
             const q = query(collection(db, "student_attempts"), orderBy("timestamp", "desc"));
             const snap = await getDocs(q);
-            let csv = "Email,Timestamp,Subject,Internal,Grade,Required SEE\n";
+            let csv = "Email,Timestamp,Subject,Sessional,Assignment,Lab Manual,LPW,Target Grade,Required SEE\n";
             
             snap.forEach(doc => {
                 const d = doc.data();
                 const time = d.timestamp?.toDate().toISOString() || "";
                 (d.data || []).forEach(r => {
-                    csv += `${d.email},${time},"${r.subject}",${r.internal},${r.grade},${r.requiredSEE}\n`;
+                    csv += `${d.email},${time},"${r.subject}",${r.sessinal||''},${r.assignment||''},${r.labManual||''},${r.lpw||''},${r.grade},${r.requiredSEE}\n`;
                 });
             });
 
@@ -578,12 +590,9 @@
             a.click();
         };
 
-        // --- SEARCH ---
         document.getElementById("searchBox").oninput = function() {
             const term = this.value.toLowerCase();
             const rows = document.querySelectorAll("#attemptTbl tbody tr");
-            // Simple logic: hide main row AND detail row if match fails
-            // This relies on the structure: Main Row, then Detail Row
             for(let i=0; i<rows.length; i+=2) {
                 const mainRow = rows[i];
                 const text = mainRow.innerText.toLowerCase();
@@ -595,12 +604,10 @@
             }
         };
 
-        // --- LOGOUT ---
         document.getElementById("logoutBtn").onclick = () => {
             signOut(auth).then(() => window.location.href = "/");
         }
 
-        // --- INIT ---
         document.getElementById("refreshBtn").onclick = loadData;
         loadData();
 
