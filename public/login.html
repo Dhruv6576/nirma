@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Nirma Login</title>
+</head>
+
+<body>
+  <h2>Login with Nirma Email</h2>
+  <button id="loginBtn">Login with Google</button>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut }
+      from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, serverTimestamp }
+      from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+    import { firebaseConfig } from "./firebase.js";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+    const db = getFirestore(app);
+
+    // FIXED LOGIN FUNCTION
+    async function doLogin() {
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const email = result.user.email;
+
+        // Save login log once
+        await addDoc(collection(db, "users_logins"), {
+          email: email,
+          name: result.user.displayName,
+          photo: result.user.photoURL,
+          timestamp: serverTimestamp()
+        });
+
+        // Admin redirect
+        if (email === "dhruvbhalala07@gmail.com") {
+          window.location.href = "/admin";
+          return;
+        }
+
+        // Student redirect
+        if (email.endsWith("@nirmauni.ac.in")) {
+          window.location.href = "/see";
+        } else {
+          alert("Access restricted to Nirma University students only.");
+          await signOut(auth);
+        }
+
+      } catch (err) {
+        alert("Login failed: " + err.message);
+      }
+    }
+
+    // FIXED: Connect button
+    document.getElementById("loginBtn").onclick = doLogin;
+
+  </script>
+
+</body>
+</html>

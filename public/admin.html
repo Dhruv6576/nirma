@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Admin Panel - Nirma SEE Calculator</title>
+
+  <script type="module" src="/auth.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f5f6fa;
+    }
+
+    h1 {
+      margin-bottom: 5px;
+    }
+
+    #searchBox {
+      margin-bottom: 15px;
+      padding: 8px;
+      width: 250px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 25px;
+      background: white;
+      box-shadow: 0 0 8px #0001;
+      border-radius: 6px;
+    }
+
+    th {
+      background: #dfe6e9;
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+
+    td {
+      padding: 8px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .innerTable {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .innerTable th {
+      background: #f1f2f6;
+      font-weight: bold;
+      border: 1px solid #bbb;
+      padding: 5px;
+    }
+
+    .innerTable td {
+      border: 1px solid #ccc;
+      padding: 4px;
+      white-space: nowrap;
+    }
+
+    .hide {
+      display: none;
+      background: #fafafa;
+    }
+
+    .expandRow {
+      cursor: pointer;
+      background: #ecf0f1;
+    }
+
+    .expandRow:hover {
+      background: #dcdde1;
+    }
+
+    button {
+      padding: 8px 12px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+
+    #loginTbl img {
+      border-radius: 50%;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <h1>Admin Panel</h1>
+  <p>View student attempts & login history</p>
+
+  <input id="searchBox" type="text" placeholder="Search email...">
+  <button id="refreshBtn">Refresh</button>
+  <button id="downloadCSV">Download CSV</button>
+
+  <h2>Student Attempts</h2>
+  <table id="attemptTbl">
+    <thead>
+      <tr>
+        <th>Email</th>
+        <th>Timestamp</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>Login History</h2>
+  <table id="loginTbl">
+    <thead>
+      <tr>
+        <th>Email</th>
+        <th>Name</th>
+        <th>Photo</th>
+        <th>Timestamp</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import { getFirestore, collection, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+    import { firebaseConfig } from "./firebase.js";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    document.getElementById("refreshBtn").onclick = loadAttempts;
+
+    /* =====================================================
+       LOAD STUDENT ATTEMPTS (EXCEL STYLE MINI TABLE)
+    ====================================================== */
+    async function loadAttempts() {
+      const q = query(collection(db, "student_attempts"), orderBy("timestamp", "desc"));
+      const snap = await getDocs(q);
+
+      const tbody = document.querySelector("#attemptTbl tbody");
+      tbody.innerHTML = "";
+
+      snap.forEach(docSnap => {
+        const data = docSnap.data();
+        const ts = data.timestamp?.toDate ? data.timestamp.toDate() : "";
+        const results = data.data || [];
+
+        // FIRST ROW — collapsible header
+        const row = document.createElement("tr");
+        row.className = "expandRow";
+        row.innerHTML = `
+          <td>${data.email}</td>
+          <td>${ts}</td>
+          <td>Click to expand ▼</td>
+        `;
+
+        // SECOND ROW — expandable details
+        const detailRow = document.createElement("tr");
+        detailRow.className = "hide";
+        detailRow.innerHTML = `
+          <td colspan="3">
+            <table class="innerTable">
+  <tr>
+    <th>Subject</th>
+    <th>Sessinal</th>
+    <th>Assignment</th>
+    <th>Lab Manual</th>
+    <th>LPW</th>
+    <th>Target Grade</th>
+    <th>Required SEE</th>
+  </tr>
+
+  ${results.map(r => `
+    <tr>
+      <td>${r.subject}</td>
+      <td>${r.sessinal ?? '-'}</td>
+      <td>${r.assignment ?? '-'}</td>
+      <td>${r.labManual ?? '-'}</td>
+      <td>${r.lpw ?? '-'}</td>
+      <td>${r.grade ?? '-'}</td>
+      <td>${r.requiredSEE}</td>
+    </tr>
+  `).join("")}
+
+  <!-- SGPA ROW -->
+  <tr style="background:#dfe6e9; font-weight:bold;">
+    <td colspan="6" style="text-align:right;">SGPA:</td>
+    <td>${(results[0]?.sgpa || 0).toFixed(2)}</td>
+  </tr>
+</table>
+
+
+          </td>
+        `;
+
+        // toggle visibility
+        row.onclick = () => detailRow.classList.toggle("hide");
+
+        tbody.appendChild(row);
+        tbody.appendChild(detailRow);
+      });
+    }
+
+    /* =====================================================
+       DOWNLOAD CSV
+    ====================================================== */
+    document.getElementById("downloadCSV").onclick = async () => {
+      const q = query(collection(db, "student_attempts"), orderBy("timestamp", "desc"));
+      const snap = await getDocs(q);
+
+      let csv = "email,timestamp,subject,internal,grade,requiredSEE\n";
+
+      snap.forEach(docSnap => {
+        const data = docSnap.data();
+        const ts = data.timestamp?.toDate ? data.timestamp.toDate() : "";
+        (data.data || []).forEach(a => {
+          csv += `"${data.email}","${ts}","${a.subject}",${a.internal},${a.grade},${a.requiredSEE}\n`;
+        });
+      });
+
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "attempts.csv";
+      link.click();
+    };
+
+    /* =====================================================
+       LOAD LOGIN HISTORY
+    ====================================================== */
+    async function loadLogins() {
+      const q = query(collection(db, "users_logins"), orderBy("timestamp", "desc"));
+      const snap = await getDocs(q);
+
+      const tbody = document.querySelector("#loginTbl tbody");
+      tbody.innerHTML = "";
+
+      snap.forEach(docSnap => {
+        const d = docSnap.data();
+        const ts = d.timestamp?.toDate ? d.timestamp.toDate() : "";
+
+        const row = `
+          <tr>
+            <td>${d.email}</td>
+            <td>${d.name}</td>
+            <td><img src="${d.photo}" width="40" height="40"></td>
+            <td>${ts}</td>
+          </tr>
+        `;
+        tbody.innerHTML += row;
+      });
+    }
+
+    /* =====================================================
+       AUTO LOAD BOTH TABLES
+    ====================================================== */
+    loadAttempts();
+    loadLogins();
+
+    /* =====================================================
+       SEARCH FILTER
+    ====================================================== */
+    document.getElementById("searchBox").oninput = function () {
+      const filter = this.value.toLowerCase();
+      const rows = document.querySelectorAll("#attemptTbl tbody tr");
+
+      rows.forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(filter) ? "" : "none";
+      });
+    };
+  </script>
+
+</body>
+
+</html>

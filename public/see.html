@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Nirma SEE Calculator</title>
+
+  <script type="module" src="/auth.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+      background: #f7f7f7;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 8px #0002;
+      margin-bottom: 12px;
+    }
+
+    .result {
+      padding: 8px;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+
+    .green {
+      background: #c8f7c5;
+    }
+
+    .yellow {
+      background: #ffeaa7;
+    }
+
+    .red {
+      background: #fab1a0;
+    }
+
+    input {
+      width: 70px;
+      margin-right: 6px;
+    }
+
+    .btn {
+      padding: 8px 12px;
+      margin: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div>
+      <h1>Nirma SEE Calculator</h1>
+      <div>Grade Predictor Based on Internal Marks</div>
+    </div>
+
+    <div>
+      <div id="userName"></div>
+      <div id="userEmail" style="color:#d63031"></div>
+      <img id="userPhoto" style="width:40px;height:40px;border-radius:50%;">
+      <button id="logout" class="btn">Logout</button>
+    </div>
+  </header>
+
+  <br>
+
+  <div id="subjects"></div>
+
+  <br>
+
+  <div class="card">
+    <h3>Your SGPA:</h3>
+    <div id="sgpaBox" style="
+        font-size:20px;
+        font-weight:bold;
+        padding:10px;
+        background:#dfe6e9;
+        border-radius:8px;
+        width:150px;">0.00</div>
+  </div>
+
+  <script type="module">
+
+    /* --------------------------
+       Firebase Imports
+    ---------------------------*/
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      getDocs,
+      query,
+      where,
+      orderBy,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
+    import { firebaseConfig } from "./firebase.js";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    /* --------------------------
+       SUBJECT DEFINITIONS
+    ---------------------------*/
+    const gradeToPercent = { 10: 91, 9: 81, 8: 71, 7: 61, 6: 51, 5: 41, 4: 31, 3: 21, 2: 11, 1: 1 };
+
+    const subjects = [
+      { name: "Environmental Science", type: "simple" },
+      { name: "Maths", type: "simple" },
+      { name: "Physics", type: "complex" },
+      { name: "Computer Programming", type: "complex" },
+      { name: "Electrical Science", type: "complex" },
+      { name: "General English", type: "complex" }
+    ];
+
+    const container = document.getElementById("subjects");
+
+
+    /* --------------------------
+       RENDER SUBJECT CARDS
+    ---------------------------*/
+    subjects.forEach((s, i) => {
+      const id = "s" + i;
+
+      let html = `
+      <div class="card">
+        <b>${s.name}</b><br><br>
+
+        Sessinal Exam:
+        <input id="${id}_i1" placeholder="Got"> / 50<br><br>
+
+        Assignment:
+        <input id="${id}_i2" placeholder="Got"> / ${s.type === "simple" ? 50 : 40}<br><br>
+    `;
+
+      if (s.type === "complex") {
+        html += `
+        Lab Manual:
+        <input id="${id}_pract" placeholder="Got"> / 100<br><br>
+
+        LPW:
+        <input id="${id}_viva" placeholder="Got"> / 40<br><br>
+      `;
+      }
+
+      html += `
+        Target Grade:
+        <input id="${id}_grade" placeholder="1-10"><br><br>
+
+        <button class="btn" onclick="showRequired('${id}', ${i})">Show Required Marks</button>
+
+        <div id="${id}_result" class="result" style="display:none;"></div>
+
+      </div>
+    `;
+
+      container.innerHTML += html;
+    });
+
+
+    /* --------------------------
+       VALUE GETTER
+    ---------------------------*/
+    function getVal(id) {
+      return parseFloat(document.getElementById(id)?.value) || 0;
+    }
+
+
+    /* --------------------------
+       CALCULATION LOGIC
+    ---------------------------*/
+    function calculate() {
+      let results = [];
+
+      subjects.forEach((s, i) => {
+
+        const id = "s" + i;
+
+        const sessinal = getVal(id + "_i1");
+        const assignment = getVal(id + "_i2");
+        const labManual = getVal(id + "_pract");
+        const lpw = getVal(id + "_viva");
+        const grade = getVal(id + "_grade");
+        const reqPercent = gradeToPercent[grade] || 0;
+
+        let internal = 0;
+
+        if (s.type === "simple") {
+          internal =
+            (sessinal / 50) * 25 +
+            (assignment / 50) * 25;
+
+        } else {
+          internal =
+            (sessinal / 50) * 15 +
+            (assignment / 40) * 10 +
+            (labManual / 100) * 15 +
+            (lpw / 40) * 10;
+        }
+
+        const requiredSEE = Math.ceil((reqPercent - internal) / 0.5);
+
+        results.push({
+          subject: s.name,
+          sessinal,
+          assignment,
+          labManual,
+          lpw,
+          grade,
+          internal,
+          requiredSEE
+        });
+      });
+
+      let totalGrade = 0;
+      results.forEach(r => totalGrade += (parseFloat(r.grade) || 0));
+      const sgpa = totalGrade / 6;
+      document.getElementById("sgpaBox").innerHTML = sgpa.toFixed(2);
+
+      return results;
+    }
+
+
+    /* --------------------------
+       SHOW REQUIRED + SAVE
+    ---------------------------*/
+    window.showRequired = async function (id, index) {
+      const user = auth.currentUser;
+      if (!user) {
+        alert("Please login first!");
+        return;
+      }
+
+      const results = calculate();   // Full results array
+      const r = results[index];      // Only for UI
+
+      // Show result
+      const box = document.getElementById(id + "_result");
+      box.style.display = "block";
+
+      if (r.requiredSEE <= 0) {
+        box.className = "result green";
+        box.innerHTML = "Already Achieved";
+      } else if (r.requiredSEE > 100) {
+        box.className = "result red";
+        box.innerHTML = "Impossible (" + r.requiredSEE + ")";
+      } else {
+        box.className = "result yellow";
+        box.innerHTML = "Need " + r.requiredSEE + " marks in SEE";
+      }
+
+      // 🔥 FINAL, CORRECT SAVE FORMAT
+      await addDoc(collection(db, "student_attempts"), {
+        email: user.email,
+        data: [...results],     // ALWAYS ARRAY
+        timestamp: serverTimestamp()
+      });
+
+    };
+
+
+    /* --------------------------
+       LOAD PREVIOUS DATA ON REFRESH
+    ---------------------------*/
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) return;
+
+      // Get the LAST saved attempt
+      const q = query(
+        collection(db, "student_attempts"),
+        where("email", "==", user.email),
+        orderBy("timestamp", "desc")
+      );
+
+      const snap = await getDocs(q);
+      if (snap.empty) return;
+
+      const last = snap.docs[0].data().data; // full array
+
+      // If somehow not array → fix it
+      let results = last;
+      if (!Array.isArray(results)) results = [results];
+
+      results.forEach((d, i) => {
+        const id = "s" + i;
+
+        document.getElementById(id + "_i1").value = d.sessinal ?? "";
+        document.getElementById(id + "_i2").value = d.assignment ?? "";
+
+        if (subjects[i].type === "complex") {
+          document.getElementById(id + "_pract").value = d.labManual ?? "";
+          document.getElementById(id + "_viva").value = d.lpw ?? "";
+        }
+
+        document.getElementById(id + "_grade").value = d.grade ?? "";
+      });
+
+
+      calculate();
+    });
+
+
+
+    /* --------------------------
+       LOGOUT
+    ---------------------------*/
+    document.getElementById("logout").onclick = () => {
+      signOut(auth);
+      window.location.href = "/login";
+    };
+
+  </script>
+
+</body>
+
+</html>
